@@ -13,7 +13,7 @@ MAX_HEADING_GAP_TOLERANCE = 1
 MIN_HEADING_CONTENT = 3
 
 class Inspector:
-    def __init__(self, infile):
+    def __init__(self, infile=None):
         self.infile = infile
 
     def inspect_iter(self) -> Inspection:
@@ -30,9 +30,7 @@ class Inspector:
                 break
 
 
-    def inspect(self, sheet=None, return_format=False) -> Inspection:
-        inspection = Inspection(infile=self.infile)
-
+    def inspect(self, sheet=None) -> Inspection:
         kwargs = {}
         # sheet == 1 should default, as it's what we expect for non-sheet formats
         if sheet is not None and sheet != 1:
@@ -40,8 +38,15 @@ class Inspector:
 
         with Stream(self.infile, **kwargs) as stream:
             data = [row for row in stream]
+            fmt = stream.format
 
         df = p.DataFrame(data)
+
+        return self.inspect_df(df, fmt)
+
+    def inspect_df(self, df, fmt='df'):
+        inspection = Inspection(infile=self.infile)
+
         df = df.replace(r'^\s*$', np.nan, regex=True)
 
         ia, iz = df.first_valid_index(), df.last_valid_index()
@@ -87,9 +92,9 @@ class Inspector:
                 }
             }
 
-        inspection.rows = region_dict
+        inspection.regions = region_dict
         inspection.shape = image.shape
-        inspection.format = stream.format
+        inspection.format = fmt
 
         return inspection
 
