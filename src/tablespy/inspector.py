@@ -78,7 +78,7 @@ class Inspector:
         for ix, region in enumerate(regions):
             title = region[-1]
             if title:
-                title_text = '\n'.join(df.loc[title[0]:title[0] + title[2], title[1]])
+                title_text = '\n'.join([str(c) for c in df.loc[title[0], title[1]:title[1] + title[2] - 1]])
             else:
                 title_text = None
 
@@ -135,7 +135,7 @@ class Inspector:
                             break
                         in_a_row += 1
                     elif in_a_row:
-                        title = (lr + offset[0], i - 1 + offset[1], in_a_row)
+                        title = (lr + offset[0], i - in_a_row + offset[1], in_a_row)
                         break
 
             regions.append((
