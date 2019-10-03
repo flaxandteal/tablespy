@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tablespy',
-    version='0.0.1',
+    version='0.0.2',
     description='Table spotter for spreadsheets',
     url='https://github.com/flaxandteal/tablespy',
     author='Phil Weir',

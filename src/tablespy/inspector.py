@@ -16,25 +16,43 @@ class Inspector:
     def __init__(self, infile=None):
         self.infile = infile
 
-    def inspect_iter(self) -> Inspection:
+    def region_iter(self, **kwargs):
+        for inspection, df, sheet in self.inspect_iter(return_df=True, **kwargs):
+            for region in inspection.regions.values():
+                region_df = df.iloc[
+                    region['header-boundary'][0] + 1:region['upper-right'][0],
+                    region['lower-left'][1]:region['upper-right'][1]
+                ]
+                region_df.columns = df.iloc[
+                    region['header-boundary'][0],
+                    region['lower-left'][1]:region['header-boundary'][1]
+                ]
+                yield region_df, region, sheet
+
+    def inspect_iter(self, return_df=False, **kwargs) -> Inspection:
         i = 0
         while True:
             i += 1
             try:
-                inspection = self.inspect(sheet=i)
+                inspection = self.inspect(sheet=i, return_df=return_df, **kwargs)
             except exceptions.SourceError:
                 break
+
             yield inspection
+
+            if return_df:
+                inspection, df, sheet = inspection
 
             if inspection.format not in ('ods', 'xls', 'xlsx'):
                 break
 
 
-    def inspect(self, sheet=None) -> Inspection:
-        kwargs = {}
+    def inspect(self, sheet=None, return_df=False, **kwargs) -> Inspection:
         # sheet == 1 should default, as it's what we expect for non-sheet formats
         if sheet is not None and sheet != 1:
             kwargs['sheet'] = sheet
+        else:
+            sheet = 1
 
         with Stream(self.infile, **kwargs) as stream:
             data = [row for row in stream]
@@ -42,7 +60,12 @@ class Inspector:
 
         df = p.DataFrame(data)
 
-        return self.inspect_df(df, fmt)
+        inspection = self.inspect_df(df, fmt)
+
+        if return_df:
+            return inspection, df, sheet
+        else:
+            return inspection
 
     def inspect_df(self, df, fmt='df'):
         inspection = Inspection(infile=self.infile)
@@ -111,7 +134,7 @@ class Inspector:
                 continue
 
             header_start = lr
-            header_end = None
+            header_end = lr
             for i in range(ur - lr):
                 row = labelled_image[lr + i]
                 if np.count_nonzero(row) > width - MAX_HEADING_GAP_TOLERANCE:
