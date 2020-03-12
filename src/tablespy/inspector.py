@@ -1,6 +1,7 @@
 from .inspection import Inspection
 import numpy as np
 import skimage
+import skimage.measure
 from tabulator import Stream, exceptions
 import pandas as p
 import xlrd
