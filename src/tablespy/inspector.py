@@ -71,7 +71,9 @@ class Inspector:
     def inspect_df(self, df, fmt='df'):
         inspection = Inspection(infile=self.infile)
 
-        df = df.replace(r'^\s*$', np.nan, regex=True)
+        df = df.replace(r'^\s*$', np.nan, regex=True).reset_index()
+        df.columns = range(len(df.columns))
+        df.index = range(len(df.index))
 
         ia, iz = df.first_valid_index(), df.last_valid_index()
         dft = df.transpose()
@@ -123,7 +125,7 @@ class Inspector:
         return inspection
 
     def region_split(self, image, offset=(0, 0)):
-        labelled_image, labels = skimage.measure.label(image, neighbors=4, return_num=True)
+        labelled_image, labels = skimage.measure.label(image, connectivity=1, return_num=True)
 
         regions = []
         for i in range(1, labels + 1):
